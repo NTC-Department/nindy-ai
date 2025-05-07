@@ -15,6 +15,9 @@ func Handler(s *discordgo.Session, m *discordgo.MessageCreate) {
 	if strings.HasPrefix(m.Content, "<@"+s.State.User.ID) {
 		NewChat(s, m).Chat()
 	} else if m.ChannelID == utils.GetEnv("CHATBOT_CHANNEL_ID") {
+		if strings.HasPrefix(m.Content, "// ") {
+			return
+		}
 		NewChat(s, m).Chat()
 	}
 }
