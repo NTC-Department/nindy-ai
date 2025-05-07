@@ -6,48 +6,95 @@ import (
 	"nindychat/utils"
 	"os"
 	"os/signal"
+	"strconv"
 	"syscall"
 
 	"github.com/google/generative-ai-go/genai"
 	"google.golang.org/api/option"
 )
 
-var geminiModel *genai.GenerativeModel
-var geminiClient *genai.Client
+var rotationFrequency = 20
+var apiKeys []string
+var apiKeyIndex = 0
+var usageCounter = 0
+
+var currentClient *genai.Client
+var currentModel *genai.GenerativeModel
+
+func InitializeGeminiEnv() {
+	apiKeys = utils.GetEnvWithMultipleValue("GEMINI_API_KEY")
+	if len(apiKeys) == 0 {
+		panic("No Gemini API keys found in environment")
+	}
+	log.Printf("Found %d Gemini API keys\n", len(apiKeys))
+
+	frequency, err := strconv.Atoi(utils.GetEnv("API_KEY_ROTATION_FREQUENCY"))
+	if err != nil {
+		log.Fatalf("Invalid API_KEY_ROTATION_FREQUENCY value: %v", err)
+	} else {
+		rotationFrequency = frequency
+	}
+}
 
 func InitializeGemini() {
 	ctx := context.Background()
-	apiKey := utils.GetEnv("GEMINI_API_KEY")
+	apiKey := getNextAPIKeyInternal()
 
 	client, err := genai.NewClient(ctx, option.WithAPIKey(apiKey))
 	if err != nil {
-		log.Fatal(err)
+		log.Fatalf("Error initializing Gemini client with initial key: %v", err)
+		return
 	}
+	currentClient = client
+	currentModel = client.GenerativeModel("gemini-2.0-flash")
+	currentModel.SetTemperature(0.7)
+	currentModel.SetMaxOutputTokens(1000)
 
-	geminiClient = client
-
-	model := client.GenerativeModel("gemini-2.0-flash")
-	model.SetTemperature(0.7)
-	model.SetMaxOutputTokens(1000)
-
-	geminiModel = model
-
-	log.Println("Gemini model initialized successfully")
+	log.Println("Gemini model initialized")
 	go waitForShutdown()
 }
 
+func getNextAPIKeyInternal() string {
+	key := apiKeys[apiKeyIndex%len(apiKeys)]
+	apiKeyIndex++
+	return key
+}
+
+func RotateGeminiAPIKey() {
+	if len(apiKeys) <= 1 {
+		return
+	}
+
+	log.Println("Rotating Gemini API Key...")
+	if currentClient != nil {
+		currentClient.Close()
+	}
+
+	InitializeGemini()
+}
+
 func GetGeminiModel() *genai.GenerativeModel {
-	if geminiModel == nil {
+	if currentModel == nil {
 		panic("Gemini model failed to initialize")
 	}
 
-	return geminiModel
+	return currentModel
+}
+
+func IncrementGeminiUsage() {
+	usageCounter++
+	if usageCounter >= rotationFrequency {
+		log.Println("Max usage reached, rotating API key...")
+		usageCounter = 0
+		RotateGeminiAPIKey()
+	}
 }
 
 func CloseGeminiClient() {
-	if geminiClient != nil {
+	if currentClient != nil {
 		log.Println("Closing Gemini client...")
-		geminiClient.Close()
+		currentClient.Close()
+		currentClient = nil
 	}
 }
 

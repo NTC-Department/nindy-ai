@@ -9,6 +9,8 @@ import (
 func main() {
 	utils.LoadEnv(".env")
 
+	external.InitializeGeminiEnv()
 	external.InitializeGemini()
+
 	config.InitializeBot()
 }

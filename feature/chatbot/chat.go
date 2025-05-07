@@ -49,6 +49,7 @@ func (c *chat) Chat() {
 			},
 		)
 		c.session.MessageReactionRemove(c.msg.ChannelID, c.msg.ID, "🔄", "@me")
+		external.RotateGeminiAPIKey()
 		return
 	}
 
@@ -78,6 +79,8 @@ func (c *chat) Chat() {
 			)
 		}
 	}
+
+	external.IncrementGeminiUsage()
 
 	err = c.session.MessageReactionRemove(c.msg.ChannelID, c.msg.ID, "🔄", "@me")
 	if err != nil {
