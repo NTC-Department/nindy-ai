@@ -70,3 +70,29 @@ func DeletePattern(pattern string) (int64, error) {
 	}
 	return deleted, nil
 }
+
+func Append(key string, value string) error {
+	if redisInstance == nil {
+		return fmt.Errorf("redis is not initialized")
+	}
+
+	err := redisInstance.Append(ctx, key, value).Err()
+	if err != nil {
+		fmt.Printf("Error appending to Redis key %s: %v\n", key, err)
+		return err
+	}
+	return nil
+}
+
+func Expire(key string, expiration time.Duration) error {
+	if redisInstance == nil {
+		return fmt.Errorf("redis is not initialized")
+	}
+
+	err := redisInstance.Expire(ctx, key, expiration).Err()
+	if err != nil {
+		fmt.Printf("Error setting expiration for Redis key %s: %v\n", key, err)
+		return err
+	}
+	return nil
+}
