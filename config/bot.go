@@ -11,6 +11,7 @@ import (
 )
 
 func InitializeBot() {
+	log.Println("===== Initialize Discord Bot =====")
 	dg, err := discordgo.New("Bot " + utils.GetEnv("BOT_TOKEN"))
 	if err != nil {
 		log.Println("error creating Discord session,", err)

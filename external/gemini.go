@@ -23,6 +23,7 @@ var currentClient *genai.Client
 var currentModel *genai.GenerativeModel
 
 func InitializeGemini() {
+	log.Println("===== Initialize Gemini =====")
 	err := initializeEnv()
 	if err != nil {
 		panic(err)
@@ -41,11 +42,12 @@ func InitializeGemini() {
 	currentModel.SetTemperature(0.7)
 	currentModel.SetMaxOutputTokens(1000)
 
-	log.Println("Gemini model initialized")
+	log.Println("✓ Gemini initialized")
 	go waitForShutdown()
 }
 
 func initializeEnv() error {
+	log.Println("Checking Gemini envs...")
 	apiKeys = utils.GetEnvWithMultipleValue("GEMINI_API_KEY")
 	if len(apiKeys) == 0 {
 		return fmt.Errorf("no Gemini API keys found in environment")
@@ -60,12 +62,14 @@ func initializeEnv() error {
 		rotationFrequency = frequency
 	}
 
+	log.Println("✓ Gemini Env checked")
 	return nil
 }
 
 func getNextAPIKeyInternal() string {
 	key := apiKeys[apiKeyIndex%len(apiKeys)]
 	apiKeyIndex++
+	log.Printf("Rotating Gemini API Key to: %sxxxx\n", key[:5])
 	return key
 }
 
