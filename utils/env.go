@@ -51,6 +51,7 @@ func GetEnvWithMultipleValue(key string) []string {
 func checkEnv() {
 	requiredEnvVars := []string{
 		"BOT_TOKEN",
+		"BOT_PREFIX",
 
 		"GEMINI_API_KEY",
 		"CHATBOT_CHANNEL_ID",
