@@ -2,7 +2,6 @@ package chatbot
 
 import (
 	"context"
-	"fmt"
 	"log"
 	"nindychat/external"
 	"strings"
@@ -42,8 +41,6 @@ func (c *chat) Chat() {
 
 	chatHistory := getChatHistory(c.msg.ChannelID)
 	appendChatHistory(c.msg.ChannelID, userName, question)
-
-	fmt.Println(chatHistory)
 
 	question = BuildPrompt(chatHistory, userName, question)
 
