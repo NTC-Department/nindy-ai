@@ -16,7 +16,7 @@ func InitializeRedis() {
 	log.Println("===== Initialize Redis =====")
 	client, err := connectRedis()
 	if err != nil {
-		panic(err)
+		return
 	}
 
 	redisInstance = client
