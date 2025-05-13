@@ -2,6 +2,7 @@ package chatbot
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"nindychat/external"
 	"strings"
@@ -26,6 +27,11 @@ func (c *chat) Chat() {
 	geminiModel := external.GetGeminiModel()
 	ctx := context.Background()
 
+	userName := c.msg.Member.Nick
+	if userName == "" {
+		userName = c.msg.Author.Username
+	}
+
 	err := c.session.MessageReactionAdd(c.msg.ChannelID, c.msg.ID, "🔄")
 	if err != nil {
 		log.Printf("Failed to add reaction: %v", err)
@@ -34,7 +40,12 @@ func (c *chat) Chat() {
 	question := strings.TrimPrefix(c.msg.Content, "<@"+c.session.State.User.ID+">")
 	question = strings.TrimSpace(question)
 
-	question = BuildPrompt(c.msg.Author.Username, c.msg.Member.Nick, question)
+	chatHistory := getChatHistory(c.msg.ChannelID)
+	appendChatHistory(c.msg.ChannelID, userName, question)
+
+	fmt.Println(chatHistory)
+
+	question = BuildPrompt(chatHistory, userName, question)
 
 	resp, err := geminiModel.GenerateContent(ctx, genai.Text(question))
 	if err != nil {
@@ -57,6 +68,8 @@ func (c *chat) Chat() {
 		switch p := part.(type) {
 		case genai.Text:
 			text := string(p)
+			appendChatHistory(c.msg.ChannelID, "Nindy Luzie", text)
+
 			c.session.ChannelMessageSendReply(
 				c.msg.ChannelID,
 				text,
