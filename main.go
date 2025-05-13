@@ -2,6 +2,7 @@ package main
 
 import (
 	"nindychat/config"
+	"nindychat/database/redis"
 	"nindychat/external"
 	"nindychat/utils"
 )
@@ -9,8 +10,7 @@ import (
 func main() {
 	utils.LoadEnv(".env")
 
-	external.InitializeGeminiEnv()
 	external.InitializeGemini()
-
+	redis.InitializeRedis()
 	config.InitializeBot()
 }

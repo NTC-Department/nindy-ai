@@ -2,6 +2,7 @@ package external
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"nindychat/utils"
 	"os"
@@ -21,22 +22,12 @@ var usageCounter = 0
 var currentClient *genai.Client
 var currentModel *genai.GenerativeModel
 
-func InitializeGeminiEnv() {
-	apiKeys = utils.GetEnvWithMultipleValue("GEMINI_API_KEY")
-	if len(apiKeys) == 0 {
-		panic("No Gemini API keys found in environment")
-	}
-	log.Printf("Found %d Gemini API keys\n", len(apiKeys))
-
-	frequency, err := strconv.Atoi(utils.GetEnv("API_KEY_ROTATION_FREQUENCY"))
-	if err != nil {
-		log.Fatalf("Invalid API_KEY_ROTATION_FREQUENCY value: %v", err)
-	} else {
-		rotationFrequency = frequency
-	}
-}
-
 func InitializeGemini() {
+	err := initializeEnv()
+	if err != nil {
+		panic(err)
+	}
+
 	ctx := context.Background()
 	apiKey := getNextAPIKeyInternal()
 
@@ -52,6 +43,24 @@ func InitializeGemini() {
 
 	log.Println("Gemini model initialized")
 	go waitForShutdown()
+}
+
+func initializeEnv() error {
+	apiKeys = utils.GetEnvWithMultipleValue("GEMINI_API_KEY")
+	if len(apiKeys) == 0 {
+		return fmt.Errorf("no Gemini API keys found in environment")
+	}
+	log.Printf("Found %d Gemini API keys\n", len(apiKeys))
+
+	frequency, err := strconv.Atoi(utils.GetEnv("API_KEY_ROTATION_FREQUENCY"))
+	if err != nil {
+		log.Fatalf("Invalid API_KEY_ROTATION_FREQUENCY value: %v", err)
+		return err
+	} else {
+		rotationFrequency = frequency
+	}
+
+	return nil
 }
 
 func getNextAPIKeyInternal() string {
