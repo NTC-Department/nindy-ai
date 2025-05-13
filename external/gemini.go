@@ -69,7 +69,7 @@ func initializeEnv() error {
 func getNextAPIKeyInternal() string {
 	key := apiKeys[apiKeyIndex%len(apiKeys)]
 	apiKeyIndex++
-	log.Printf("Rotating Gemini API Key to: %sxxxx\n", key[:5])
+	log.Printf("Now using Gemini API Key: %s****\n", key[:10])
 	return key
 }
 
