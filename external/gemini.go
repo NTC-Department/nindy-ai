@@ -38,7 +38,7 @@ func InitializeGemini() {
 		return
 	}
 	currentClient = client
-	currentModel = client.GenerativeModel("gemini-2.0-flash")
+	currentModel = client.GenerativeModel("gemini-2.5-flash")
 	currentModel.SetTemperature(0.7)
 	currentModel.SetMaxOutputTokens(1000)
 
