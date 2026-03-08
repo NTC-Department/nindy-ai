@@ -81,7 +81,7 @@ func (c *chat) Chat() {
 		switch p := part.(type) {
 		case genai.Text:
 			text := string(p)
-			appendChatHistory(c.msg.ChannelID, "Nindy Luzie", text)
+			appendChatHistory(c.msg.ChannelID, "Siggy", text)
 
 			c.session.ChannelMessageSendReply(
 				c.msg.ChannelID,
