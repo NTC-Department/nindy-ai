@@ -23,7 +23,6 @@ func NewChat(s *discordgo.Session, m *discordgo.MessageCreate) *chat {
 }
 
 func (c *chat) Chat() {
-	geminiModel := external.GetGeminiModel()
 	ctx := context.Background()
 
 	userName := c.msg.Member.Nick
@@ -44,12 +43,30 @@ func (c *chat) Chat() {
 
 	question = BuildPrompt(chatHistory, userName, question)
 
-	resp, err := geminiModel.GenerateContent(ctx, genai.Text(question))
-	if err != nil {
-		log.Fatal(err)
+	var resp *genai.GenerateContentResponse
+	var genErr error
+
+	for attempt := 1; attempt <= 3; attempt++ {
+		geminiModel := external.GetGeminiModel()
+		resp, genErr = geminiModel.GenerateContent(ctx, genai.Text(question))
+		if genErr == nil {
+			break
+		}
+
+		log.Printf("[Attempt %d] Gemini GenerateContent Error: %v", attempt, genErr)
+
+		if strings.Contains(genErr.Error(), "429") || strings.Contains(genErr.Error(), "Quota exceeded") {
+			log.Println("Rate limit or quota exceeded, rotating API key and retrying...")
+			external.RotateGeminiAPIKey()
+		} else {
+			break
+		}
+	}
+
+	if genErr != nil {
 		c.session.ChannelMessageSendReply(
 			c.msg.ChannelID,
-			"[!] Error: "+err.Error(),
+			"[!] Error: "+genErr.Error(),
 			&discordgo.MessageReference{
 				MessageID: c.msg.ID,
 				ChannelID: c.msg.ChannelID,
@@ -57,7 +74,6 @@ func (c *chat) Chat() {
 			},
 		)
 		c.session.MessageReactionRemove(c.msg.ChannelID, c.msg.ID, "🔄", "@me")
-		external.RotateGeminiAPIKey()
 		return
 	}
 
@@ -65,7 +81,7 @@ func (c *chat) Chat() {
 		switch p := part.(type) {
 		case genai.Text:
 			text := string(p)
-			appendChatHistory(c.msg.ChannelID, "Siggy", text)
+			appendChatHistory(c.msg.ChannelID, "Nindy Luzie", text)
 
 			c.session.ChannelMessageSendReply(
 				c.msg.ChannelID,
