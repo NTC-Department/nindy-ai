@@ -13,7 +13,16 @@ func Handler(s *discordgo.Session, m *discordgo.MessageCreate) bool {
 		return true
 	}
 
-	if m.ChannelID == utils.GetEnv("CHATBOT_CHANNEL_ID") {
+	allowedChannels := strings.Split(utils.GetEnv("CHATBOT_CHANNEL_ID"), ",")
+	isAllowedChannel := false
+	for _, id := range allowedChannels {
+		if strings.TrimSpace(id) == m.ChannelID {
+			isAllowedChannel = true
+			break
+		}
+	}
+
+	if isAllowedChannel {
 		if strings.HasPrefix(m.Content, "// ") {
 			return false
 		}
