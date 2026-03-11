@@ -8,7 +8,10 @@ import (
 )
 
 func Handler(s *discordgo.Session, m *discordgo.MessageCreate) bool {
-	if strings.HasPrefix(m.Content, "<@"+s.State.User.ID) {
+	isMentioned := strings.HasPrefix(m.Content, "<@"+s.State.User.ID)
+	isReplyToBot := m.ReferencedMessage != nil && m.ReferencedMessage.Author != nil && m.ReferencedMessage.Author.ID == s.State.User.ID
+
+	if isMentioned || isReplyToBot {
 		NewChat(s, m).Chat()
 		return true
 	}
